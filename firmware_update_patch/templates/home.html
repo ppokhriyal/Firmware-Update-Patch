@@ -1,0 +1,36 @@
+{% extends 'layout.html' %}
+{% block content %}
+	<h4> Patch History
+	<a href="{{url_for('build_patch')}}" class="btn btn-success btn-sm float-right">Build New Patch</a></h4>
+	<div class="border-top pt-2"></div>
+	{% if patch_len == 0 %}
+		<p class="display-4">No Patch History Found</p>
+	{% else %}
+		{% for patches in patch.items %}
+			<div class="card mb-3">
+  				<div class="card-header">
+    				{{patches.patchname}} [ {{patches.patchgenid}} ]
+  				</div>
+  				<div class="card-body">
+    				<p class="card-text">{{ patches.discription | safe }}</p>
+  				</div>
+  				<div class="card-footer text-muted">
+    				Patch Build on : {{ patches.date_posted.strftime('%d-%m-%Y') }}
+  				</div>
+			</div>
+		{% endfor %}
+		<div class="rounded-0 col-lg-13 mx-auto">
+    	{% for page_num in patch.iter_pages(left_edge=1,right_edge=1,left_current=1,right_current=2) %}
+      		{% if page_num %}
+        		{% if patch.page == page_num %}
+          			<a class="btn btn-info mb-4 mt-2" href="{{ url_for('home',page=page_num)}}">{{ page_num }}</a>
+        		{% else %}
+          			<a class="btn btn-outline-info mb-4 mt-2" href="{{ url_for('home',page=page_num)}}">{{ page_num }}</a>
+        		{% endif %}  
+      		{% else %}
+        		...
+      		{% endif %}
+    	{% endfor %}
+   </div>	
+	{% endif %}
+{% endblock content %}

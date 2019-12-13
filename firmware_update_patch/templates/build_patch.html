@@ -1,0 +1,52 @@
+{% extends 'layout.html' %}
+{% block content %}
+	<h4>Building New Patch</h4>
+	<div class="border-top pt-2 mb-4"></div>
+	<form method="POST" action=""  enctype="multipart/form-data">
+		{{ form.hidden_tag() }}
+		<div class="form-group row">
+    		<label for="colFormLabel" class="col-sm-2 col-form-label">Patch Build</label>
+    		<div class="col-sm-5">
+      			{{form.patch_build_id(class="form-control patchidclass",value=build_id,id="patchidinput")}}
+    		</div>
+    	</div>
+		<div class="form-group row">
+    		<label for="colFormLabel" class="col-sm-2 col-form-label">Patch Name</label>
+    		<div class="col-sm-5">
+      			{{form.patch_name(class="form-control")}}
+    		</div>
+    	</div>
+    	<div class="form-group row">
+    		<label for="colFormLabel" class="col-sm-2 col-form-label">Description</label>
+    		<div class="col-sm-5">
+    			{{form.patch_discription(class="form-control",placeholder="Patch Description ...")}}
+    		</div>
+    	</div>
+  		<!--Upload Files-->
+      <h6>Upload Files and Packages</h6>
+      <div class="border-top mt-2 pt-2">
+      <div class="form-group">
+        <button class="btn btn-sm btn-primary mb-2" type="button" data-toggle="collapse" data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
+          Remove Files and Packages
+        </button>
+      </div>  
+      <div class="collapse mb-2" id="collapseExample">
+         {{form.remove(class="form-control",placeholder="List files to be removed in /sda1/boot, /sda1/data/core, /sda1/data/basic, /sda1/data/apps, /sda1/data. For multiple files use ':' as a seprator")}}
+      </div>
+      <div class="form-group">
+        <button class="btn btn-sm btn-primary mb-2" type="button" data-toggle="collapse" data-target="#collapseExample1" aria-expanded="false" aria-controls="collapseExample">
+          Adding Files and Packages
+        </button>
+      </div>  
+      <div class="collapse" id="collapseExample1">
+         <p>List files to be added in /sda1/boot, /sda1/data/core, /sda1/data/basic, /sda1/data/apps, /sda1/data. For multiple files use ':' as a seprator</p>
+         <h7>Boot : /sda1/boot</h7>
+      </div>
+
+    	<div class="border-top mt-2 pt-2">
+    		<div class="form-group mt-2">
+          		{{ form.submit(class="btn btn-secondary",id="buildpatchbtn")}}
+            	<a class="btn btn-warning" href="{{url_for('home')}}">Cancel</a>
+        	</div>
+			</form>	
+{% endblock content %}
