@@ -26,6 +26,11 @@ class Patch(db.Model):
         patchname = db.Column(db.String(100),nullable=False)
         date_posted = db.Column(db.DateTime(),nullable=False,default=datetime.utcnow)
         discription = db.Column(db.Text,nullable=False)
+        max_img_ver = db.Column(db.Integer)
+        min_img_ver = db.Column(db.Integer)
+        remove = db.Column(db.Text)
+        add = db.Column(db.Text)
+        install = db.Column(db.Text)
         user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
 
         def __repr__(self):

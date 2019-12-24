@@ -1,52 +1,82 @@
 {% extends 'layout.html' %}
 {% block content %}
 	<h4>Building New Patch</h4>
-	<div class="border-top pt-2 mb-4"></div>
-	<form method="POST" action=""  enctype="multipart/form-data">
-		{{ form.hidden_tag() }}
-		<div class="form-group row">
-    		<label for="colFormLabel" class="col-sm-2 col-form-label">Patch Build</label>
-    		<div class="col-sm-5">
-      			{{form.patch_build_id(class="form-control patchidclass",value=build_id,id="patchidinput")}}
-    		</div>
-    	</div>
-		<div class="form-group row">
-    		<label for="colFormLabel" class="col-sm-2 col-form-label">Patch Name</label>
-    		<div class="col-sm-5">
-      			{{form.patch_name(class="form-control")}}
-    		</div>
-    	</div>
-    	<div class="form-group row">
-    		<label for="colFormLabel" class="col-sm-2 col-form-label">Description</label>
-    		<div class="col-sm-5">
-    			{{form.patch_discription(class="form-control",placeholder="Patch Description ...")}}
-    		</div>
-    	</div>
-  		<!--Upload Files-->
-      <h6>Upload Files and Packages</h6>
-      <div class="border-top mt-2 pt-2">
-      <div class="form-group">
-        <button class="btn btn-sm btn-primary mb-2" type="button" data-toggle="collapse" data-target="#collapseExample" aria-expanded="false" aria-controls="collapseExample">
-          Remove Files and Packages
-        </button>
-      </div>  
-      <div class="collapse mb-2" id="collapseExample">
-         {{form.remove(class="form-control",placeholder="List files to be removed in /sda1/boot, /sda1/data/core, /sda1/data/basic, /sda1/data/apps, /sda1/data. For multiple files use ':' as a seprator")}}
-      </div>
-      <div class="form-group">
-        <button class="btn btn-sm btn-primary mb-2" type="button" data-toggle="collapse" data-target="#collapseExample1" aria-expanded="false" aria-controls="collapseExample">
-          Adding Files and Packages
-        </button>
-      </div>  
-      <div class="collapse" id="collapseExample1">
-         <p>List files to be added in /sda1/boot, /sda1/data/core, /sda1/data/basic, /sda1/data/apps, /sda1/data. For multiple files use ':' as a seprator</p>
-         <h7>Boot : /sda1/boot</h7>
-      </div>
+  <div class="border-top pt-2">
+  <form method="POST" action="" >
+    {{ form.hidden_tag() }}
+  <div class="form-group row">
+    <label class="col-sm-2 col-form-label">Patch Build Id</label>
+    <div class="col-sm-5">
+      {{form.patch_build_id(class="form-control",value=build_id)}}
+    </div>
+  </div>
 
-    	<div class="border-top mt-2 pt-2">
-    		<div class="form-group mt-2">
-          		{{ form.submit(class="btn btn-secondary",id="buildpatchbtn")}}
-            	<a class="btn btn-warning" href="{{url_for('home')}}">Cancel</a>
-        	</div>
-			</form>	
+  <div class="form-group row">
+    <label class="col-sm-2 col-form-label">Patch Name</label>
+    <div class="col-sm-5">
+      {{form.patch_name(class="form-control")}}
+    </div>
+  </div>
+
+  <div class="form-group row">
+    <label class="col-sm-2 col-form-label">Patch Description</label>
+    <div class="col-sm-5">
+      {{form.patch_discription(class="form-control")}}
+    </div>
+  </div>
+
+  <div class="form-group row">
+    <label class="col-sm-2 col-form-label">OS Architecture</label>
+    <div class="col-sm-5">
+      {{form.os_type(class="form-check-input",type="radio")}}
+    </div>
+  </div>
+
+  <p class="pt-3">Minimum and Maximum Build Version
+  <br><small>Please mention Minimum and Maximum Build version.This makes patch to work between the mentioned Build versions.</small></p>
+  <div class="form-group row">
+    <div class="col-sm-6">
+      {{form.min_img_build(class="form-control",placeholder="Minimum Build Version")}}
+    </div>
+  </div>
+
+  <div class="form-group row">
+    <div class="col-sm-6">
+      {{form.max_img_build(class="form-control",placeholder="Maximum Build Version")}}
+    </div>
+  </div>
+
+  <p>Remove Files and Packages
+  <br><small>List all the Files and Packages to be removed. Use colon ' : ' as a seprator.</small></p>
+  <div class="form-group row">
+    <div class="col-sm-6">
+      {{form.remove(class="form-control")}}
+    </div>
+  </div>
+
+  <p>Adding Files and Packages
+    <br><small>List all the URL's of Files and Packages to be added. Use semicolon ' ; ' as a seprator.</small></p>
+  <div class="form-group row">
+    <div class="col-sm-6">
+      {{form.add(class="form-control")}}
+    </div>
+  </div>
+
+  <p>Install Script 
+  <br><small>Write your custom install script.This script will be run by Firmware Update binary.
+  Use semicolon ' ; ' after the end of each line.</small></p>
+  <div class="form-group row">
+    
+    <div class="col-sm-6">
+      {{form.install_script(class="form-control",placeholder="All Packages and Files will be removed and added after reboot in initramfs. Here All the operations will be done before reboot of the OS.")}}
+    </div>
+  </div>
+  <div class="form-group row">
+    <div class="col-sm-5">
+       {{form.submit(class="btn btn-primary")}}
+       <a class="btn btn-warning" href="{{url_for('home')}}" role="button">Cancel</a>
+    </div>
+  </div>
+</form>  
+	
 {% endblock content %}

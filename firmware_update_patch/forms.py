@@ -1,7 +1,7 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
 from flask_login import current_user
-from wtforms import StringField, PasswordField, SubmitField, BooleanField, TextAreaField, SelectField,IntegerField
+from wtforms import StringField, PasswordField, SubmitField, BooleanField, TextAreaField, SelectField,IntegerField,RadioField
 from wtforms.validators import DataRequired, Length, Email, EqualTo, ValidationError, InputRequired
 from firmware_update_patch.models import User, Patch
 import random
@@ -34,18 +34,14 @@ class LoginForm(FlaskForm):
 
 
 class PatchForm(FlaskForm):
-    #build_id = random.randint(1111,9999)
     patch_build_id = IntegerField('Patch Build Id',validators=[DataRequired()])
     patch_name = StringField('Patch Name',validators=[DataRequired()])
+    min_img_build = IntegerField('Minimum')
+    max_img_build = IntegerField('Maximum')
+    os_type = RadioField('OS Type',choices=[('32','32-Bit'),('64','64-Bit')],validators=[InputRequired()])
     patch_discription = TextAreaField('Description',validators=[DataRequired()])
-   
     remove = TextAreaField('Remove')
-
-    #boot_add = TextAreaField('Boot')
-    #core_add = StringField('Core')
-    #basic_add = TextAreaField('Basic')
-    #apps_add = TextAreaField('Apps')
-    #data_file_add = TextAreaField('Data')
-
+    add = TextAreaField('Add')
+    install_script = TextAreaField('install')
     submit = SubmitField('Build')
 

@@ -4,7 +4,7 @@
 	<a href="{{url_for('build_patch')}}" class="btn btn-success btn-sm float-right">Build New Patch</a></h4>
 	<div class="border-top pt-2"></div>
 	{% if patch_len == 0 %}
-		<p class="display-4">No Patch History Found</p>
+		<p class="display-4 text-info">No Patch History Found</p>
 	{% else %}
 		{% for patches in patch.items %}
 			<div class="card mb-3">
@@ -15,7 +15,7 @@
     				<p class="card-text">{{ patches.discription | safe }}</p>
   				</div>
   				<div class="card-footer text-muted">
-    				Patch Build on : {{ patches.date_posted.strftime('%d-%m-%Y') }}
+    				Patch Build on : {{ patches.date_posted.strftime('%d-%m-%Y')}}
   				</div>
 			</div>
 		{% endfor %}

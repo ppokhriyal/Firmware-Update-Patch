@@ -57,7 +57,7 @@
           <div class="form-group">
             {% if form.email.errors %}
                   {{ form.email(class="form-control is-invalid",placeholder="Email id@vxlsoftware.com") }}
-                  <small  class="form-text text-muted">We'll never share your email with anyone else.</small>
+                  
                   <div class="invalid-feedback">
                       {% for error in form.email.errors %}
                         <span>{{ error }}</span>
@@ -65,7 +65,7 @@
                   </div>
             {% else %}
               {{ form.email(class="form-control",placeholder="Email id@vxlsoftware.com") }}
-              <small class="form-text text-muted">We'll never share your email with anyone else.</small>
+              
            {% endif %}
           </div>
 
