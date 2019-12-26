@@ -34,11 +34,12 @@ class LoginForm(FlaskForm):
 
 
 class PatchForm(FlaskForm):
-    patch_build_id = IntegerField('Patch Build Id',validators=[DataRequired()])
+    patch_build_id = IntegerField('Patch Build Id',render_kw={'readonly':True},validators=[DataRequired()])
     patch_name = StringField('Patch Name',validators=[DataRequired()])
     min_img_build = IntegerField('Minimum')
     max_img_build = IntegerField('Maximum')
-    os_type = RadioField('OS Type',choices=[('32','32-Bit'),('64','64-Bit')],validators=[InputRequired()])
+    os_type = SelectField('OS Architecture',choices=[('32','32-Bit'),('64','64-Bit'),('global','Global')])
+    
     patch_discription = TextAreaField('Description',validators=[DataRequired()])
     remove = TextAreaField('Remove')
     add = TextAreaField('Add')

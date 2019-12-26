@@ -38,12 +38,12 @@ def login():
 @app.route('/home')
 @login_required
 def home():
-    page = request.args.get('page',1,type=int)
-    patch = Patch.query.filter_by(author=current_user).order_by(Patch.date_posted.desc()).paginate(page=page,per_page=4)
+    # page = request.args.get('page',1,type=int)
+    # patch = Patch.query.filter_by(author=current_user).order_by(Patch.date_posted.desc()).paginate(page=page,per_page=4)
     patch_len = len(db.session.query(Patch).all())
 
-    #return render_template('home.html',title='Home',patch_len=patch_len)
-    return render_template('home.html',title='Home',patch_len=patch_len,patch=patch)
+    return render_template('home.html',title='Home',patch_len=patch_len)
+    #return render_template('home.html',title='Home',patch_len=patch_len,patch=patch)
 
 
 #Register Page
@@ -113,30 +113,32 @@ def build_patch():
     #Make patch-id working Directory
     os.makedirs('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id))
     os.makedirs('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update")
-
+    
+    #REMOVE
     os.makedirs('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/remove")
+    os.makedirs('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/remove/boot")
+    os.makedirs('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/remove/basic")
+    os.makedirs('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/remove/core")
+    os.makedirs('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/remove/apps")
+    os.makedirs('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/remove/data")
+    os.makedirs('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/remove/root")
 
+    #Add
     os.makedirs('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/add")
     os.makedirs('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/add/boot")
     os.makedirs('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/add/basic")
     os.makedirs('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/add/core")
     os.makedirs('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/add/apps")
     os.makedirs('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/add/data")
+    os.makedirs('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/add/root")
     
+    #Create sample Install Script
+    f = open('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/install","a+")
+    f.write(f"""#!/bin/bash\n\nmount -o remount,rw /sda1\n\n""")
+    f.close()
+
+
     if form.validate_on_submit():
-
-        
-        
-        #Get the list of files to be removed
-        remove_list = form.remove.data
-        remove_list_list = []
-
-        if not remove_list:
-            Path('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/remove/"+"empty").touch()
-        else:
-            remove_list_list = remove_list.split(':')
-            for r in remove_list_list:
-                Path('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/remove/"+r).touch()
 
         #Get the list of files to be added
         add_list = form.add.data
@@ -150,9 +152,9 @@ def build_patch():
             for a in add_list_list:
                 prefix = a.split('-',1)
 
-                #Check if Prefix have boot-,core-,apps-,basic-,data-
-                if prefix[0].casefold() not in ['boot','core','basic','apps','data']:
-                    flash(f'Missing Prefix in {prefix[0]}','danger')
+                #Check if Prefix have boot-,core-,apps-,basic-,data-,root-
+                if prefix[0].casefold() not in ['boot','core','basic','apps','data','root']:
+                    flash(f'Missing Prefix in {prefix[0]},while package add','danger')
                     return redirect(url_for('build_patch'))
 
                 #Check URL is live or not
@@ -166,24 +168,47 @@ def build_patch():
 
                         #Downloading Respect
                         if prefix[0].casefold() == 'boot':
-                            print('BOOT FOUND')
-                            wget.download(prefix[1],'/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/add/boot/")
+                            
+                            wget.download(url=prefix[1],out='/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/add/boot/")
+
+                            if prefix[1].rsplit('/',1)[1] in ['initramfs.igz','kernel']:
+                                f = open('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/install","a+")
+                                f.write(f"""rm -rf /sda1/boot/{prefix[1].rsplit('/',1)[1]}\nmv /root/firmware_update/add/boot/{prefix[1].rsplit('/',1)[1]} /sda1/boot/\n rm -rf /root/firmware_update/remove/boot/{prefix[1].rsplit('/',1)[1]}\n""")
+                                f.close()
+                                Path('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/remove/boot/"+prefix[1].rsplit('/',1)[1]).touch()
 
                         elif prefix[0].casefold() == 'core':
-                            print('CORE FOUND')
-                            wget.download(prefix[1],'/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/add/core/")
+                            
+                            wget.download(url=prefix[1],out='/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/add/core/")
+                            f = open('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/install","a+")
+                            f.write(f"""rm -rf /sda1/data/core/{prefix[1].rsplit('/',1)[1]}\nmv /root/firmware_update/add/core/{prefix[1].rsplit('/',1)[1]} /sda1/data/core/\n rm -rf /root/firmware_update/remove/core/{prefix[1].rsplit('/',1)[1]}\n""")
+                            f.close()
+                            Path('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/remove/data/core/"+prefix[1].rsplit('/',1)[1]).touch()
+
 
                         elif prefix[0].casefold() == 'basic':
-                            print('BASIC FOUND')
-                            wget.download(prefix[1],'/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/add/basic/")
+                            
+                            wget.download(url=prefix[1],out='/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/add/basic/")
+
+                            if prefix[1].rsplit('/',1)[1] in ['verixo-bin.sq']:
+
+                                f = open('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/install","a+")
+                                f.write(f"""rm -rf /sda1/data/basic/{prefix[1].rsplit('/',1)[1]}\nmv /root/firmware_update/add/basic/{prefix[1].rsplit('/',1)[1]} /sda1/data/basic/\nrm -rf /root/firmware_update/remove/basic/{prefix[1].rsplit('/',1)[1]}\n""")
+                                f.close()
+                                Path('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/remove/data/basic/"+prefix[1].rsplit('/',1)[1]).touch()
+
 
                         elif prefix[0].casefold() == 'apps':
-                            print('APPS FOUND')
-                            wget.download(prefix[1],'/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/add/apps/")
+                            
+                            wget.download(url=prefix[1],out='/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/add/apps/")
+
+                        elif prefix[0].casefold() == 'root':
+                            
+                            wget.download(url=prefix[1],out='/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/add/root/")    
 
                         else:
-                            print('DATA FOUND')
-                            wget.download(prefix[1],'/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/add/data/")
+                            
+                            wget.download(url=prefix[1],out='/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/add/data/")
 
                     else:
                         flash(f'Invalid URL :{prefix[1]}','danger')
@@ -195,30 +220,121 @@ def build_patch():
                     flash(f'Invalid URL :{prefix[1]}','danger')
                     return redirect(url_for('build_patch'))
 
-        #Install script
-        install_script = form.install_script.data
-        if len(install_script) != 0:
+        #Get List of Remove Files and Packages
+        remove_list = form.remove.data
+        remove_list_list = []
 
-            f = open('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/install","x")
-            f.write("""#!/bin/bash\n\n""")
+        if not remove_list:
+            Path('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/remove/"+"empty").touch()
+        else:
+            remove_list_list = remove_list.split(':')
 
-            install_list = form.install_script.data
-            install_list_list = []
+            for r in remove_list_list:
+                prefix = r.split('-',1)
+
+                #Check if Prefix have boot-,core-,apps-,basic-,data-,root-
+                if prefix[0].casefold() not in ['boot','core','basic','apps','data','root']:
+                    flash(f'Missing Prefix in {prefix[0]},while package add','danger')
+                    return redirect(url_for('build_patch'))
+                    
+
+                if prefix[0] == 'boot':
+
+                    if prefix[1] in ['initramfs.igz','kernel']:
+
+                        if not os.path.exists('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/add/boot/"+prefix[1]):
+
+                            flash(f'{prefix[1]} not added in the Add section','danger')
+                            return redirect(url_for('build_patch'))
+                        else:
+                            if not os.path.exists('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/remove/boot/"+prefix[1]):
+
+                                Path('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/remove/boot/"+prefix[1]).touch()
+                                f = open('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/install","a+")
+                                f.write(f"""rm -rf /root/firmware_update/remove/boot/{prefix[1]}\n""")
+                                f.close()
+
+                            else:
+                                f = open('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/install","a+")
+                                f.write(f"""rm -rf /root/firmware_update/remove/boot/{prefix[1]}\n""")
+                                f.close()
+
+                    else:
+
+                        Path('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/remove/boot/"+prefix[1]).touch() 
+
+                elif prefix[0] == 'core':
+
+                    if prefix[1] in ['core.sq']:
+
+                        if not os.path.exists('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/add/core/"+prefix[1]):
+                            flash(f'{prefix[1]} not added in the Add section','danger')
+                        else:
+                            if not os.path.exists('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/remove/core/"+prefix[1]):
+
+                                Path('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/remove/core/"+prefix[1]).touch()
+                                f = open('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/install","a+")
+                                f.write(f"""rm -rf /root/firmware_update/remove/core/{prefix[1]}\n""")
+                                f.close()
+                            else:
+
+                                f = open('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/install","a+")
+                                f.write(f"""rm -rf /root/firmware_update/remove/core/{prefix[1]}\n""")
+                                f.close()
+                    else:
+                        Path('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/remove/core/"+prefix[1]).touch()
+
+
+
+                elif prefix[0] == 'basic':
+
+                    if prefix[1] in ['verixo-bin.sq']:
+                        if not os.path.exists('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/add/basic/"+prefix[1]):
+                            flash(f'{prefix[1]} not added in the Add section','danger')
+                        else:
+                            if not os.path.exists('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/remove/basic/"+prefix[1]):
+                                f = open('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/install","a+")
+                                f.write(f"""rm -rf /root/firmware_update/remove/basic/{prefix[1]}\n""")
+                                f.close()
+                            else:
+                                f = open('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/install","a+")
+                                f.write(f"""rm -rf /root/firmware_update/remove/basic/{prefix[1]}\n""")
+                                f.close()
+                    else:
+                        Path('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/remove/basic/"+prefix[1]).touch()
+
+                elif prefix[0] == 'apps':
+
+                    if not os.path.exists('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/remove/apps/"+prefix[1]):
+                        Path('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/remove/apps/"+prefix[1]).touch()
+
+                elif prefix[0] == 'data':
+
+                    if not os.path.exists('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/remove/data/"+prefix[1]):
+                        Path('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/remove/data/"+prefix[1]).touch()
+                else:
+
+                    if not os.path.exists('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/remove/root/"+prefix[1]):
+                        Path('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/remove/root/"+prefix[1]).touch()        
+
+
+        #User Install script
+        user_install_script = form.install_script.data
+        install_list_list = []
+
+        if len(user_install_script) != 0:
 
             #Writing Install Script        
-            install_list_list = install_list.split(';')
-
+            install_list_list = user_install_list.split(';')
+            f = open('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/install","a+")
             for i in install_list_list:
                 f.write(i+'\n')
-
-            f.close()
-        else:
-            f = open('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/install","x")
-            f.write("""#!/bin/bash\n\n""")
             f.close()
 
-        #Building Verify Patch script
 
+        #Last line for Install script
+        f = f = open('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/install","a+")
+        f.write(f"""sync\nmount -o remount,ro /sda1\n""")
         #Check for 32Bit 64Bit Arch
         user_arch_input = form.os_type.data
 
@@ -307,10 +423,8 @@ def build_patch():
 
         f.close()
 
-        
-
         #Check if Remove,Add TextField is empty
-        if len(remove_list) == 0 and len(add_list) == 0 :
+        if len(form.remove.data) == 0 and len(form.add.data) == 0 :
 
             flash(f'Invalid Patch Creation','danger')
             return redirect(url_for('build_patch'))
@@ -344,9 +458,9 @@ def build_patch():
         #Path('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"finish.true").touch()
 
         #Update DataBase
-        patch_update = Patch(patchgenid=form.patch_build_id.data,author=current_user,patchname=form.patch_name.data,discription=form.patch_discription.data,ostype=form.os_type.data)
-        db.session.add(patch_update)
-        db.session.commit()
+        patch_update = Patch(patchgenid=form.patch_build_id.data,author=current_user,patchname=form.patch_name.data,discription=form.patch_discription.data)
+        #db.session.add(patch_update)
+        #db.session.commit()
 
         return redirect(url_for('home'))
         
