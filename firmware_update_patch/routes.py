@@ -132,6 +132,9 @@ def build_patch():
     os.makedirs('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/add/data")
     os.makedirs('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/add/root")
     
+    #TMP
+    os.makedirs('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/tmp/add")
+    
     #Create sample Install Script
     f = open('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/install","a+")
     f.write(f"""#!/bin/bash\n\nmount -o remount,rw /sda1\n\n""")
@@ -153,7 +156,7 @@ def build_patch():
                 prefix = a.split('-',1)
 
                 #Check if Prefix have boot-,core-,apps-,basic-,data-,root-
-                if prefix[0].casefold() not in ['boot','core','basic','apps','data','root']:
+                if prefix[0].casefold() not in ['boot','core','basic','apps','data','root','tmp']:
                     flash(f'Missing Prefix in {prefix[0]},while package add','danger')
                     return redirect(url_for('build_patch'))
 
@@ -204,7 +207,12 @@ def build_patch():
 
                         elif prefix[0].casefold() == 'root':
                             
-                            wget.download(url=prefix[1],out='/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/add/root/")    
+                            wget.download(url=prefix[1],out='/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/add/root/")
+
+                        elif prefix[0].casefold() == 'tmp':
+
+                            wget.download(url=prefix[1],out='/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/tmp/add/")
+
 
                         else:
                             
@@ -432,7 +440,7 @@ def build_patch():
 
         #Building Patch Tar
         subprocess.call(['chmod','-R','755','/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)])
-        patchname = form.patch_name.data.replace(' ','_')+'.tar.bz2'
+        patchname = form.patch_name.data.replace(' ','_')+'_'+str(build_id)+'.tar.bz2'
         tar_file_path = '/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+'/'+patchname
         tar = tarfile.open(tar_file_path,mode='w:bz2')
         os.chdir('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/")

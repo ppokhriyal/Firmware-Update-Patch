@@ -38,7 +38,7 @@ class PatchForm(FlaskForm):
     patch_name = StringField('Patch Name',validators=[DataRequired()])
     min_img_build = IntegerField('Minimum')
     max_img_build = IntegerField('Maximum')
-    os_type = SelectField('OS Architecture',choices=[('32','32-Bit'),('64','64-Bit'),('global','Global')])
+    os_type = SelectField('OS Architecture',choices=[('32','32-Bit'),('64','64-Bit')])
     
     patch_discription = TextAreaField('Description',validators=[DataRequired()])
     remove = TextAreaField('Remove')
