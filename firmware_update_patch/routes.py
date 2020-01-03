@@ -17,8 +17,8 @@ import subprocess
 import tarfile
 
 #Login Page
-@app.route('/',methods=['GET','POST'])
-@app.route('/login',methods=['GET','POST'])
+
+@app.route('/build_patch/login',methods=['GET','POST'])
 def login():
     form = LoginForm()
     if form.validate_on_submit():
@@ -38,12 +38,13 @@ def login():
 @app.route('/home')
 @login_required
 def home():
-    # page = request.args.get('page',1,type=int)
-    # patch = Patch.query.filter_by(author=current_user).order_by(Patch.date_posted.desc()).paginate(page=page,per_page=4)
+
+    page = request.args.get('page',1,type=int)
+    patch = Patch.query.filter_by(author=current_user).order_by(Patch.date_posted.desc()).paginate(page=page,per_page=4)
     patch_len = len(db.session.query(Patch).all())
 
-    return render_template('home.html',title='Home',patch_len=patch_len)
-    #return render_template('home.html',title='Home',patch_len=patch_len,patch=patch)
+    #return render_template('home.html',title='Home',patch_len=patch_len)
+    return render_template('home.html',title='Home',patch_len=patch_len,patch=patch)
 
 
 #Register Page
@@ -68,13 +69,13 @@ def register():
 def send_mail(patchgenid,author,patchname,discription,pmd5sum):
 
     user = User.query.filter_by(username=current_user.username).first()
-    
+ 
     send_to = user.email
     send_from = user.email
     server_mail = "mail.vxlsoftware.com"
     send_from_user_password = user.password
     subject = patchname.replace(' ','_')
-    patch_url = "http://192.168.0.188/var/www/html/Firmware-Update-Patch-Records/"+str(patchgenid)+"/"+patchname.replace(' ','_')+'.tar.bz2'
+    patch_url = "http://192.168.0.188/Firmware-Update-Patch-Records/"+str(patchgenid)+"/"+patchname.replace(' ','_')+'_'+str(patchgenid)+'.tar.bz2'
     patch_md5sum = pmd5sum
     body_msg = f'" Hello All,\n Please find below details of Firmware Update :\n\nURL : {patch_url}\n\nMD5SUM : {pmd5sum}\n\nDescription:\n\n{discription}\n\nThanks and Regrads\n{user.username}"'
 
@@ -195,10 +196,10 @@ def build_patch():
 
                             if prefix[1].rsplit('/',1)[1] in ['verixo-bin.sq']:
 
-                                f = open('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/install","a+")
-                                f.write(f"""rm -rf /sda1/data/basic/{prefix[1].rsplit('/',1)[1]}\nmv /root/firmware_update/add/basic/{prefix[1].rsplit('/',1)[1]} /sda1/data/basic/\nrm -rf /root/firmware_update/remove/basic/{prefix[1].rsplit('/',1)[1]}\n""")
-                                f.close()
-                                Path('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/remove/data/basic/"+prefix[1].rsplit('/',1)[1]).touch()
+                                # f = open('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/install","a+")
+                                # f.write(f"""rm -rf /sda1/data/basic/{prefix[1].rsplit('/',1)[1]}\nmv /root/firmware_update/add/basic/{prefix[1].rsplit('/',1)[1]} /sda1/data/basic/\nrm -rf /root/firmware_update/remove/basic/{prefix[1].rsplit('/',1)[1]}\n""")
+                                # f.close()
+                                Path('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/remove/basic/"+prefix[1].rsplit('/',1)[1]).touch()
 
 
                         elif prefix[0].casefold() == 'apps':
@@ -232,7 +233,7 @@ def build_patch():
         remove_list = form.remove.data
         remove_list_list = []
 
-        if not remove_list:
+        if len(remove_list) == 0:
             Path('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"Build-Template/root/firmware_update/remove/"+"empty").touch()
         else:
             remove_list_list = remove_list.split(':')
@@ -460,15 +461,15 @@ def build_patch():
         patch_md5sum = md5sum[:32]
 
         #Send Email
-        #send_mail(patchgenid=form.patch_build_id.data,author=current_user,patchname=form.patch_name.data,discription=form.patch_discription.data,pmd5sum=patch_md5sum)
+        send_mail(patchgenid=str(build_id),author=current_user,patchname=form.patch_name.data,discription=form.patch_discription.data,pmd5sum=patch_md5sum)
       
         #Finish
-        #Path('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"finish.true").touch()
+        Path('/var/www/html/Firmware-Update-Patch-Records/'+str(build_id)+"/"+"finish.true").touch()
 
         #Update DataBase
         patch_update = Patch(patchgenid=form.patch_build_id.data,author=current_user,patchname=form.patch_name.data,discription=form.patch_discription.data)
-        #db.session.add(patch_update)
-        #db.session.commit()
+        db.session.add(patch_update)
+        db.session.commit()
 
         return redirect(url_for('home'))
         
